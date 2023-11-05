@@ -23,5 +23,9 @@ I used my own implementation of a simple [physics engine](https://github.com/ntu
 The Code is licensed under MIT Public License.
 
 ## ToDo ##
-- Add halo effect for the sun.
-- Implement better camera controlls
+- [ ] Add halo effect for the sun.
+- [ ] Adjust new object creation plane. E.g. tilting, moving, anchoring focused objects etc.
+- [ ] Add an option to automatically adjust the list of gravitationally affecting bodies. 
+For example Jupiter's moons don't need to be affected by Mercury and vise versa.
+- [ ] Extract mouse control implementation to separate class.
+- [ ] Add tooltips
