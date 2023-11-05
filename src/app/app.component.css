@@ -1,0 +1,83 @@
+#canvas {
+  position: relative;
+}
+
+#HUD {
+  position: absolute;
+}
+
+#menu {
+  top: 10px;
+  right: 10px;
+}
+
+#bodies-list {
+  bottom: 10px;
+  right: 10px;
+}
+
+.gui {
+  padding: 10px;
+  position: absolute;
+  color: white;
+  opacity: 0.2;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.gui:hover {
+  opacity: 1;
+  transition: none;
+}
+
+.row {
+  margin-bottom: 10px;
+}
+
+.vector input {
+  width: 50px;
+}
+
+th {
+  text-align: left;
+}
+
+td {
+  padding: 5px;
+  width: 10%;
+  height: 25px;
+}
+
+tbody tr:hover {
+  background-color: gray;
+  cursor: pointer;
+}
+
+#table-wrapper {
+  position: relative;
+}
+
+#table-scroll {
+  height: 200px;
+  overflow: auto;
+  margin-top: 20px;
+}
+
+#table-wrapper table {
+  width: 100%;
+
+}
+
+#table-wrapper table * {
+  /*           background:yellow;
+            color:black; */
+}
+
+#table-wrapper table thead th .text {
+  position: absolute;
+  top: -20px;
+  /*           z-index:2; */
+  text-align: center;
+  height: 30px;
+  /*           width:100%; */
+  /*           border:1px solid red; */
+}
