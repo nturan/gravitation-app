@@ -48,7 +48,7 @@ td {
 }
 
 tbody tr:hover {
-  background-color: gray;
+  background-color: #808080;
   cursor: pointer;
 }
 
