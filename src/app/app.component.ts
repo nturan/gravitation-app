@@ -1,9 +1,10 @@
-import {AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 import * as THREE from 'three';
 import * as Controls from 'three/examples/jsm/controls/OrbitControls';
-import {Body} from '../js/CelestialBody';
-import {Integrator} from "../js/PhysicsEngine";
-import {FrameCounter} from "../js/frameCounter";
+import { Body } from '../models/CelestialBody';
+import { Integrator } from "../models/PhysicsEngine";
+import { FrameCounter } from "../models/frameCounter";
+import { Lensflare, LensflareElement } from "three/examples/jsm/objects/Lensflare";
 
 
 @Component({
@@ -32,35 +33,35 @@ export class AppComponent implements OnInit, AfterViewInit {
     stepSize: 1 / 365 / 30 / 24 / 60,
     name: "minutes per second"
   },
-    {
-      physics_loop: 1,
-      stepSize: 1 / 365 / 30 / 24,
-      name: "hours per second"
-    },
-    {
-      physics_loop: 1,
-      stepSize: 1 / 365 / 30,
-      name: "days per second"
-    },
-    {
-      physics_loop: 7,
-      stepSize: 1 / 365 / 30,
-      name: "weeks per second"
-    },
-    {
-      physics_loop: 30,
-      stepSize: 1 / 365 / 30,
-      name: "months per second"
-    }];
+  {
+    physics_loop: 1,
+    stepSize: 1 / 365 / 30 / 24,
+    name: "hours per second"
+  },
+  {
+    physics_loop: 1,
+    stepSize: 1 / 365 / 30,
+    name: "days per second"
+  },
+  {
+    physics_loop: 7,
+    stepSize: 1 / 365 / 30,
+    name: "weeks per second"
+  },
+  {
+    physics_loop: 30,
+    stepSize: 1 / 365 / 30,
+    name: "months per second"
+  }];
 
   availableIntegrators = [{
     f: Integrator.euler,
     name: "simple euler method"
   },
-    {
-      f: Integrator.rk4,
-      name: "4th order runge-kutta"
-    }];
+  {
+    f: Integrator.rk4,
+    name: "4th order runge-kutta"
+  }];
 
   simSpeed: any = this.availableSpeeds[2];
   integrator: any = this.availableIntegrators[0];
@@ -123,7 +124,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   private initScene() {
 
     this.scene = new THREE.Scene();
-    this.renderer = new THREE.WebGLRenderer({antialias: true});
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.canvasRef.nativeElement.appendChild(this.renderer.domElement);
     this.mainCamera = new THREE.PerspectiveCamera(
@@ -141,13 +142,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.cameraControllerReference = this.mainCameraController;
     this.cameraReference = this.mainCamera;
     /** for testing only **/
-      // this.controls.dampingFactor = 1.0;
-      // this.controls.enableZoom = true;
+    // this.controls.dampingFactor = 1.0;
+    // this.controls.enableZoom = true;
     const texture = this.loader.load('assets/2k_stars_milky_way.jpg', () => {
-        const renderTarget = new THREE.WebGLCubeRenderTarget(texture.image.height);
-        renderTarget.fromEquirectangularTexture(this.renderer, texture);
-        this.scene.background = renderTarget.texture;
-      });
+      const renderTarget = new THREE.WebGLCubeRenderTarget(texture.image.height);
+      renderTarget.fromEquirectangularTexture(this.renderer, texture);
+      this.scene.background = renderTarget.texture;
+    });
 
     this.scene.add(new THREE.AmbientLight(0x333333));
     this.initSolarSystem(this.scene);
@@ -161,7 +162,7 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     this.eclipticPlane = new THREE.Mesh(
       new THREE.PlaneGeometry(100000, 100000),
-      new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.DoubleSide}));
+      new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide }));
 
     this.newBodySpeedArrow = new THREE.ArrowHelper(
       new THREE.Vector3(0, 1, 0),
@@ -244,7 +245,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.cameraReference = this.mainCamera;
     this.cameraControllerReference = this.mainCameraController;
     this.cameraControllerReference.update();
-    for (let body of this.bodies){
+    for (let body of this.bodies) {
       body.setPivotObject(this.systemBaryCenter);
     }
   }
@@ -261,16 +262,14 @@ export class AppComponent implements OnInit, AfterViewInit {
     } else {
       this.creation = true;
       this.pauseSimulation = true;
-      this.newBody.position.x = 0.0;
-      this.newBody.position.y = 0.0;
-      this.newBody.position.z = 0.0;
+      this.newBody.position.copy(new THREE.Vector3());
 
       this.scene.add(this.newBody);
     }
   }
 
   remove(body: Body) {
-    let i = this.bodies.indexOf(body);
+    const i = this.bodies.indexOf(body);
     this.scene.remove(body.renderObject);
     this.bodies.splice(i, 1);
   }
@@ -279,7 +278,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.cameraReference = body.camera;
     this.fakeCamera = this.cameraReference.clone();
     this.cameraControllerReference = new Controls.OrbitControls(this.fakeCamera, this.renderer.domElement);
-    for (let body_i of this.bodies){
+    for (const body_i of this.bodies) {
       body_i.setPivotObject(body.renderObject);
     }
   }
@@ -293,18 +292,13 @@ export class AppComponent implements OnInit, AfterViewInit {
       baryCenter.add(body.position.clone().multiplyScalar(body.mass));
       totalMass += body.mass;
     }
-    this.systemBaryCenter.position.copy(baryCenter.multiplyScalar(1.0/totalMass));
+    this.systemBaryCenter.position.copy(baryCenter.multiplyScalar(1.0 / totalMass));
   }
 
   pickVector3FromScene(plane: THREE.Mesh, mousePosition: THREE.Vector2, camera: THREE.Camera) {
-
-    //todo: check whether the mouse on plane
-    // update the picking ray with the camera and mouse position
-
-    let raycaster = new THREE.Raycaster();
+    const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(mousePosition, camera);
-    // calculate objects intersecting the picking ray
-    let intersect = raycaster.intersectObject(plane);
+    const intersect = raycaster.intersectObject(plane);
     return intersect[0].point;
   }
 
@@ -378,8 +372,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   @HostListener("window:resize", [])
   onWindowResize() {
-    this.cameraReference.aspect = window.innerWidth / window.innerHeight;
-    this.cameraReference.updateProjectionMatrix();
+    this.fakeCamera.aspect = window.innerWidth / window.innerHeight;
+    this.fakeCamera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
@@ -467,17 +461,45 @@ export class AppComponent implements OnInit, AfterViewInit {
     /** Point Light for sun **/
     let sunLight = new THREE.PointLight(0xffffff, 10);
     sunLight.castShadow = true;
+
+    let textureFlare0 = this.loader.load("assets/lensflare0.png");
+    let textureFlare1 = this.loader.load("assets/lensflare2.png");
+    let textureFlare2 = this.loader.load("assets/lensflare3.png");
+
+    let lensFlare = new Lensflare();
+    let sunRadius = this.bodies[0].radius;
+    lensFlare.addElement(new LensflareElement(textureFlare0, sunRadius * 100000, 0));
+    lensFlare.addElement(new LensflareElement(textureFlare1, sunRadius * 500000, 0));
+    lensFlare.addElement(new LensflareElement(textureFlare2, sunRadius * 1000000, 2));
+
+    sunLight.add(lensFlare);
+
     this.bodies[0].addExtraRenderObjects(sunLight);
 
+    let apiUrl = "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND='499'&OBJ_DATA='YES'&MAKE_EPHEM='YES'&EPHEM_TYPE='OBSERVER'&CENTER='500@399'&START_TIME='2006-01-01'&STOP_TIME='2006-01-20'&STEP_SIZE='1%20d'&QUANTITIES='1,9,20,23,24,29'";
+
+    fetch(apiUrl)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
 
     /** Saturns ring **/
     let ringTexture = this.loader.load("assets/2k_saturn_ring_alpha.png");
     //ring_texture.rotation = math.PI/2;
     //ring_texture.updateMatrix();
-    let ringGeometry = new THREE.RingGeometry(1.005 * 60300/150E+6, 60300/150E+6 * 1.705, 32);
+    let ringGeometry = new THREE.RingGeometry(1.005 * 60300 / 150E+6, 60300 / 150E+6 * 1.705, 32);
     let pos = ringGeometry.getAttribute("position");
     let v3 = new THREE.Vector3();
-    for (let i =0; i < pos.count; i++){
+    for (let i = 0; i < pos.count; i++) {
       v3.fromBufferAttribute(pos, i);
       ringGeometry.getAttribute("uv").setXY(i, v3.length() < 1.2 * 60300 / 150E+6 ? 0 : 1, 1);
     }

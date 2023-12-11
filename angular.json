@@ -16,6 +16,7 @@
             "outputPath": "dist/gravitation-app",
             "index": "src/index.html",
             "main": "src/main.ts",
+            "baseHref": "/gravitation-app/",
             "polyfills": [
               "zone.js"
             ],
@@ -91,8 +92,22 @@
             ],
             "scripts": []
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
+  },
+  "cli": {
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }

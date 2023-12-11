@@ -1,15 +1,6 @@
-import {GenericIntegrator, PhysicsBody} from 'src/js/PhysicsEngine';
-import {
-  Vector3,
-  Mesh,
-  IcosahedronGeometry,
-  MeshPhongMaterial,
-  Object3D,
-  Texture,
-  Matrix3,
-  CatmullRomCurve3, Scene, Line, LineBasicMaterial, BufferGeometry, Group, PerspectiveCamera
-} from 'three';
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
+import {GenericIntegrator, PhysicsBody} from 'src/models/PhysicsEngine';
+import * as THREE from 'three';
+import * as Controls from "three/examples/jsm/controls/OrbitControls";
 import {Gravity} from "./Gravity";
 
 export class Body {
@@ -18,28 +9,28 @@ export class Body {
   private _name: string;
   private readonly _radius: number;
   private readonly _mass: number;
-  private _position: Vector3;
-  private _velocity: Vector3;
+  private _position: THREE.Vector3;
+  private _velocity: THREE.Vector3;
   private _physicsBody: PhysicsBody;
   private _affectingBodies: Body[] = [];
   private readonly _color: number = 0xffffff;
-  private _trajectory: Vector3[] = [];
-  private _trajectoryObject: Object3D | null = null;
-  private _trajectoryPivotObject: Object3D = new Object3D();
-  private _renderObject: Group = new Group();
-  private _mainMesh: Object3D;
+  private _trajectory: THREE.Vector3[] = [];
+  private _trajectoryObject: THREE.Object3D | null = null;
+  private _trajectoryPivotObject: THREE.Object3D = new THREE.Object3D();
+  private _renderObject: THREE.Group = new THREE.Group();
+  private _mainMesh: THREE.Object3D;
   private readonly _trajectoryLength: number = 150;
-  private _sceneReference: Scene;
-  private _camera: PerspectiveCamera;
+  private _sceneReference: THREE.Scene;
+  private _camera: THREE.PerspectiveCamera;
   private _physicsTickCounter: number = 0;
   private _trajectoryLogInterval: number = 10;
   private _showTrajectory: Boolean = true;
 
   constructor(name: string, mass: number, radius: number,
-              initial_position: Vector3, initial_velocity: Vector3, sceneReference: Scene, cameraReference: PerspectiveCamera, texture: Texture | null = null) {
+              initial_position: THREE.Vector3, initial_velocity: THREE.Vector3, sceneReference: THREE.Scene, cameraReference: THREE.PerspectiveCamera, texture: THREE.Texture | null = null) {
     this._name = name;
-    this._mass = mass / 18981.3;
-    this._radius = radius / 150E+6;//0.01AU = km*1E-6
+    this._mass = mass / 18981.3; // normalize to jupiter mass
+    this._radius = radius / 150E+6; // 0.01AU = km*1E-6
     this._position = initial_position;
     this._velocity = initial_velocity.multiplyScalar(365.25);
     this._physicsBody = new PhysicsBody(
@@ -47,18 +38,18 @@ export class Body {
       () => this.calculateInertiaTensor());
     this._sceneReference = sceneReference;
     this._camera = cameraReference.clone();
-    this._camera.position.copy(new Vector3(1, 1, 1).normalize().multiplyScalar(this._radius*5));
+    this._camera.position.copy(new THREE.Vector3(1, 1, 1).normalize().multiplyScalar(this._radius*5));
     this._camera.up.set(0, 0, 1);
 
     interface MaterialParams {
       color?: number,
       emissive?: number,
-      map?: Texture,
-      emissiveMap?: Texture,
+      map?: THREE.Texture,
+      emissiveMap?: THREE.Texture,
       emissiveIntensity: number
     }
 
-    let geometry = new IcosahedronGeometry(this._radius, 2);
+    let geometry = new THREE.IcosahedronGeometry(this._radius, 2);
     let params: MaterialParams = {emissive: this._color, emissiveIntensity: 0.1};
     if (texture !== null) {
       params.map = texture;
@@ -67,8 +58,8 @@ export class Body {
       params.color = this._color;
     }
 
-    let material = new MeshPhongMaterial(params);
-    this._mainMesh = new Mesh(geometry, material);
+    let material = new THREE.MeshPhongMaterial(params);
+    this._mainMesh = new THREE.Mesh(geometry, material);
     this._mainMesh.name = this._name;
     this._mainMesh.rotateX(Math.PI/2);
     this._renderObject.add(this._mainMesh);
@@ -120,10 +111,10 @@ export class Body {
   get physicsBody(): PhysicsBody {
     return this._physicsBody;
   }
-  get renderObject(): Group {
+  get renderObject(): THREE.Group {
     return this._renderObject;
   }
-  get camera(): PerspectiveCamera {
+  get camera(): THREE.PerspectiveCamera {
     return this._camera;
   }
 
@@ -139,13 +130,13 @@ export class Body {
     this._velocity = this._physicsBody.velocity;
     this._renderObject.position.copy(this._position);
     /** TODO introduce proper way to do this **/
-    this._mainMesh.rotateOnAxis(new Vector3(0, 1, 0), 2.0 * Math.PI / 365.5);
+    this._mainMesh.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2.0 * Math.PI / 365.5);
     this.logTrajectory();
   }
 
   calculateInertiaTensor() {
     let momentOfInertia = 0.4 * this._mass * this._radius * this._radius; /** for a sphere **/
-    return new Matrix3().identity().multiplyScalar(momentOfInertia);
+    return new THREE.Matrix3().identity().multiplyScalar(momentOfInertia);
   }
 
   applyGravity() {
@@ -169,10 +160,10 @@ export class Body {
       this._trajectoryObject = null;
     if (this._trajectory.length > 3 && this._showTrajectory) {
       // this.shiftTrajectoryByPivot();
-      let curve = new CatmullRomCurve3(this.trajectory);
-      this._trajectoryObject = new Line(
-        new BufferGeometry().setFromPoints(curve.getPoints(100)),
-        new LineBasicMaterial({color: this.color, linewidth: 5})
+      let curve = new THREE.CatmullRomCurve3(this.trajectory);
+      this._trajectoryObject = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(curve.getPoints(100)),
+        new THREE.LineBasicMaterial({color: this.color, linewidth: 5})
       );
       this._trajectoryPivotObject.add(this._trajectoryObject);
     }
@@ -182,12 +173,12 @@ export class Body {
     this._affectingBodies = affectingBodies;
   }
 
-  setPivotObject(pivotObject: Object3D) {
+  setPivotObject(pivotObject: THREE.Object3D) {
     this._trajectoryPivotObject = pivotObject;
     this._trajectory = []; // TODO: shift old trajectories in the future
   }
 
-  addExtraRenderObjects(extraObject: Object3D){
+  addExtraRenderObjects(extraObject: THREE.Object3D){
     this._renderObject.add(extraObject);
   }
 }

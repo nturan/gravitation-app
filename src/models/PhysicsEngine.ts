@@ -1,8 +1,8 @@
-import {add, index, inv, Matrix, matrix, multiply} from 'mathjs';
-import {Euler, Matrix3, Quaternion, Vector3} from "three";
+import {add, index, Matrix, matrix, multiply} from 'mathjs';
+import * as THREE from "three";
 
 interface InertiaCalculator {
-  (): Matrix3;
+  (): THREE.Matrix3;
 }
 
 export interface GenericIntegrator {
@@ -22,32 +22,32 @@ export class PhysicsBody {
   private readonly _mass;
   private _position;
   private _velocity;
-  private _acceleration: Vector3;
+  private _acceleration: THREE.Vector3;
   private _quaternion;
-  private _inertiaTensor: Matrix3;
-  private _totalForceOnBody: Vector3;
-  private _totalTorqueOnBody: Vector3;
-  private _w: Vector3;
-  private _L: Vector3;
-  private _euler: Euler;
+  private _inertiaTensor: THREE.Matrix3;
+  private _totalForceOnBody: THREE.Vector3;
+  private _totalTorqueOnBody: THREE.Vector3;
+  private _w: THREE.Vector3;
+  private _L: THREE.Vector3;
+  private _euler: THREE.Euler;
   private _inertiaTensorCalculator: InertiaCalculator;
   private _stateVector: Matrix = matrix();
 
 
-  constructor(mass: number, position: Vector3, velocity: Vector3,
+  constructor(mass: number, position: THREE.Vector3, velocity: THREE.Vector3,
               InertiaTensorCalculator = PhysicsBody.DefaultInertiaTensorCalculator) {
     this._mass = mass;
     this._position = position;
     this._velocity = velocity;
     this._inertiaTensorCalculator = InertiaTensorCalculator;
     this._inertiaTensor = this._inertiaTensorCalculator();
-    this._totalForceOnBody = new Vector3();
-    this._totalTorqueOnBody = new Vector3();
-    this._acceleration = new Vector3();
-    this._quaternion = new Quaternion();
-    this._w = new Vector3();
+    this._totalForceOnBody = new THREE.Vector3();
+    this._totalTorqueOnBody = new THREE.Vector3();
+    this._acceleration = new THREE.Vector3();
+    this._quaternion = new THREE.Quaternion();
+    this._w = new THREE.Vector3();
     this._L = this._w.clone().applyMatrix3(this._inertiaTensor);
-    this._euler = new Euler();
+    this._euler = new THREE.Euler();
     this._euler.setFromQuaternion(this._quaternion);
     this._refillStateVector();
   }
@@ -71,11 +71,11 @@ export class PhysicsBody {
       ]);
   }
 
-  ApplyForce(newForce: Vector3) {
+  ApplyForce(newForce: THREE.Vector3) {
     this._totalForceOnBody.add(newForce);
   }
 
-  ApplyTorque(newTorque: Vector3) {
+  ApplyTorque(newTorque: THREE.Vector3) {
     this._totalTorqueOnBody.add(newTorque);
   }
 
@@ -101,21 +101,21 @@ export class PhysicsBody {
       this._stateVector.subset(index([10, 11, 12])).toArray() as number []);
     this._w = this._L.clone().applyMatrix3(this._inertiaTensor.clone().invert());
 
-    this._totalForceOnBody = new Vector3();
-    this._totalTorqueOnBody = new Vector3();
+    this._totalForceOnBody = new THREE.Vector3();
+    this._totalTorqueOnBody = new THREE.Vector3();
     this._refillStateVector();
   }
 
   dxdt(t: number, x: Matrix, arg: any[]) {
     /** we cannot really take this._stateVector here, because x gets modified when calculating ki vectors. **/
-    let v = new Vector3().fromArray(
+    let v = new THREE.Vector3().fromArray(
       x.subset(index([3, 4, 5])).toArray() as number[]).multiplyScalar(1.0 / this._mass);
-    let q = new Quaternion().fromArray(
+    let q = new THREE.Quaternion().fromArray(
       x.subset(index([6, 7, 8, 9])).toArray() as number[]).normalize();
-    let L = new Vector3().fromArray(
+    let L = new THREE.Vector3().fromArray(
       x.subset(index([10, 11, 12])).toArray() as number []);
     let w = L.applyMatrix3(this._inertiaTensor.clone().invert());
-    q.multiply(new Quaternion(w.x, w.y, w.z, 0.0));
+    q.multiply(new THREE.Quaternion(w.x, w.y, w.z, 0.0));
 
 
     return matrix([v.x, v.y, v.z, //velocity
@@ -130,7 +130,7 @@ export class PhysicsBody {
   }
 
   static DefaultInertiaTensorCalculator() {
-    return new Matrix3().identity();
+    return new THREE.Matrix3().identity();
   }
 }
 

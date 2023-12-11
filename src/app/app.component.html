@@ -14,7 +14,7 @@
         Radius: <input type="text" [(ngModel)]="newRadius" placeholder="Radius"> in km
       </label>
       <label>
-        Start velocity: {{newVelocity.length().toFixed(2)}}
+        Start velocity: {{(365.25 * newVelocity.length()).toFixed(2)}}
         in <a
         href="https://en.wikipedia.org/wiki/Astronomical_unit"
         target="_blank">AU</a> per year
